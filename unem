@@ -1,0 +1,101 @@
+setwd("C:/Users/Amelia/Desktop")
+unemp <- read.csv("unempstates.csv")
+head(unemp)
+
+View(unemp)
+
+class(unemp)
+unemp <- as.matrix(unemp)
+
+summary(unemp[,1:4])
+
+plot(unemp[,1], type = "l", col= "black", main = "Plot of unemployment rate of AL and AK states",
+     ylim = c(0,15), ylab = "Unemployment rate", 
+     xlab = "Months in 1976-2010")
+points(unemp[,2], type = "l", col="red")
+legend("bottomleft", inset =.02, title = "States", 
+       c("AL", "AK"),
+       col = c("black", "red"), lty = 1:4)
+
+boxplot(unemp[,1:3], col=c("grey", "bisque", "light grey"))
+title("Comparing boxplots of first three States")
+
+unemp <- t(unemp)
+set.seed(1)
+
+clusters <- kmeans(x=unemp, centers = 3, nstart = 20)
+
+install.packages("ggplot2")
+library("ggplot2")
+
+install.packages("factoextra")
+library(factoextra)
+install.packages("dplyr")
+library(dplyr)
+
+
+fviz_nbclust(unemp, kmeans, method = "wss")
+fviz_nbclust(unemp, kmeans, method = "gap_stat")
+
+wss <- (nrow(unemp)-1)*sum(apply(unemp,2,var))
+for (i in 2:15) wss[i] <- sum(kmeans(unemp,
+                                     centers=i)$withinss)
+plot(1:15, wss, type="b", xlab="Number of Clusters",
+     ylab="Within groups sum of squares")
+
+set.seed(123)
+clust1 <- kmeans(unemp, centers = 2, nstart = 20)
+sort(clust1$cluster)
+fviz_cluster(clust1, data = unemp,
+             ellipse.type = "convex",
+             palette="Set2",
+             ggtheme = theme_minimal())
+
+clust3 <- kmeans(unemp, centers = 3, nstart = 20)
+sort(clust3$cluster)
+fviz_cluster(clust3, data = unemp,
+             ellipse.type = "convex",
+             palette="Set2",
+             ggtheme = theme_minimal())
+
+clust4 <- kmeans(unemp, centers = 4, nstart = 20)
+sort(clust4$cluster)
+fviz_cluster(clust4, data = unemp,
+             ellipse.type = "convex",
+             palette="Set2",
+             ggtheme = theme_minimal())
+
+clust5 <- kmeans(unemp, centers = 5, nstart = 20)
+sort(clust5$cluster)
+fviz_cluster(clust5, data = unemp,
+             ellipse.type = "convex",
+             palette="Set2",
+             ggtheme = theme_minimal())
+
+table(x=clust3$cluster)
+
+install.packages("matrixStats")
+library(matrixStats)
+
+n.unemp <- transform(unemp[,-(1:416)], 
+                        states = row.names(unemp),
+                        SD = rowSds(unemp), 
+                        mean = rowMeans(unemp),
+                        mediana = rowMedians(unemp),
+                        minimum = rowMins(unemp),
+                        maximum = rowMaxs(unemp))
+
+head(n.unemp)  
+
+set.seed(123)
+
+n.cluster <- kmeans(n.unemp[c("SD", "mean")], 
+                    centers = 3, nstart = 20)
+
+sort(n.cluster$cluster)
+
+plot(n.unemp$mean, n.unemp$SD, type = "n", 
+     xlab = "mean", ylab = "SD")
+text(x=n.unemp$mean, y=n.unemp$SD, labels = n.unemp$states,
+     col = n.cluster$cluster+7)
+title("Plot of K-mean clustering depends on sample SD and mean")
